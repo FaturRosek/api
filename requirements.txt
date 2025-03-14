@@ -3,4 +3,3 @@ uvicorn
 tensorflow
 pillow
 numpy
-tflite-runtime
