@@ -12,8 +12,9 @@ from fastapi.responses import FileResponse
 
 app = FastAPI()
 
-# Load model TFLite
-interpreter = tflite.Interpreter(model_path="mobilenetv2_batik.tflite")
+# Load model TFLite sekali saja saat API dimulai
+MODEL_PATH = "mobilenetv2_batik.tflite"
+interpreter = tflite.Interpreter(model_path=MODEL_PATH)
 interpreter.allocate_tensors()
 
 # Ambil input dan output model
@@ -21,7 +22,7 @@ input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
 # Nama-nama kelas batik
-class_names = ["Bangkalan", "Pamekasan", "Sampang", "Sumenep"] 
+class_names = ["Bangkalan", "Pamekasan", "Sampang", "Sumenep"]  
 
 # Buat folder untuk menyimpan gambar jika belum ada
 UPLOAD_FOLDER = "uploaded_images"
@@ -58,8 +59,9 @@ async def predict(file: UploadFile = File(...)):
 
     label, confidence = predict_image(img)
 
-    # Buat URL untuk mengakses gambar
-    image_url = f"http://localhost:8000/images/{unique_filename}"
+    # Buat URL untuk mengakses gambar (sesuaikan dengan Railway)
+    base_url = os.getenv("BASE_URL", "https://api-production-eac6.up.railway.app/")  # Ganti dengan domain Railway saat deploy
+    image_url = f"{base_url}/images/{unique_filename}"
 
     return {
         "class": label,
@@ -77,5 +79,5 @@ async def get_image(filename: str):
 app.mount("/images", StaticFiles(directory=UPLOAD_FOLDER), name="images")
 
 if __name__ == "__main__":
-    uvicorn.run("server:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)), reload=True)
-
+    port = int(os.getenv("PORT", 8000))  # Ambil PORT dari Railway
+    uvicorn.run(app, host="0.0.0.0", port=port)
